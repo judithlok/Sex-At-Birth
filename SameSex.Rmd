@@ -1,0 +1,367 @@
+---
+title: "Same Sex letter"
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r}
+# Clear memory
+rm(list = ls())
+
+# Load visualization libraries
+#library(ggplot2)
+#library(hrbrthemes)
+#library(GGally)
+#install.packages(Rtools)
+#library(Rtools)
+# Load data
+install.packages("readxl")
+# Load the readxl package
+library(readxl)
+# Set the path to your .xlsx file
+file_path <- "C:/Users/jjlok/OneDrive - Boston University/judith/SameSex.xlsx"  
+
+# Read the data from the Excel file
+SameSexData <- read_excel(file_path)
+
+# View the first few rows to confirm
+head(SameSexData)
+attach(SameSexData)
+
+```
+
+```{r}
+head(NumFams)
+head(F2)
+totalnumF2<-sum(NumFams*F2,na.rm = TRUE)
+totalnumF3<-sum(NumFams*F3,na.rm = TRUE)
+totalnumF4<-sum(NumFams*F4,na.rm = TRUE)
+totalnumF5<-sum(NumFams*F5,na.rm = TRUE)
+totalnumFgeq2<-totalnumF2+totalnumF3+totalnumF4+totalnumF5
+print(totalnumF2)
+print(totalnumF3)
+print(totalnumFgeq2)
+totalnumchildrengeq2<-sum(NumFams*(N-1),na.rm=TRUE)
+print(totalnumchildrengeq2)
+pF<-totalnumFgeq2/totalnumchildrengeq2
+print(pF)
+pM=1-pF
+print(pM)
+
+```
+
+```{r}
+same3M <- rep(NA, length(F3))  # Initialize with NAs
+# Condition 1: All equal and N >= 3 → same3 = 1
+same3M[F2 == F1 & F3 == F1 & N >= 3 & F1 == 0] <- 1
+same3M[F2 == F1 & F3 == (1 - F1) & N >= 3 & F1 == 0] <- 0
+totalsame3givensame2M<-sum(NumFams*same3M,na.rm = TRUE)
+print(totalsame3givensame2M)
+totaldif3givensame2M<-sum(NumFams*(1-same3M),na.rm = TRUE)
+print(totaldif3givensame2M)
+pmgivenMM<-totalsame3givensame2M/(totalsame3givensame2M+totaldif3givensame2M)
+print(pmgivenMM)
+```
+
+
+```{r}
+same4M <- rep(NA, length(F4))  # Initialize with NAs
+same4M[F2 == F1 & F3 == F1 & F4 == F1 & N >= 4 & F1 == 0] <- 1
+same4M[F2 == F1 & F3 == F1 & F4 == (1-F1) & N >= 4 & F1 == 0] <- 0
+totalsame4givensame3M<-sum(NumFams*same4M,na.rm = TRUE)
+print(totalsame4givensame3M)
+totaldif4givensame3M<-sum(NumFams*(1-same4M),na.rm = TRUE)
+print(totaldif4givensame3M)
+pmgivenMMM<-totalsame4givensame3M/(totalsame4givensame3M+totaldif4givensame3M)
+print(pmgivenMMM)
+```
+
+
+```{r}
+same5M <- rep(NA, length(F5))  # Initialize with NAs
+same5M[F2 == F1 & F3 == F1 & F4 == F1 & F5 == F1 & N >= 5 & F1 == 0] <- 1
+same5M[F2 == F1 & F3 == F1 & F4 == F1 & F5 == (1-F1) & N >= 5 & F1 == 0] <- 0
+totalsame5givensame4M<-sum(NumFams*same5M,na.rm = TRUE)
+print(totalsame5givensame4M)
+totaldif5givensame4M<-sum(NumFams*(1-same5M),na.rm = TRUE)
+print(totaldif5givensame4M)
+pmgivenMMMM<-totalsame5givensame4M/(totalsame5givensame4M+totaldif5givensame4M)
+print(pmgivenMMMM)
+```
+
+```{r}
+sameafter2givensamebeforeM <- totalsame3givensame2M+totalsame4givensame3M+totalsame5givensame4M
+print(sameafter2givensamebeforeM)
+difafter2givensamebeforeM <- totaldif3givensame2M+totaldif4givensame3M+totaldif5givensame4M
+print(difafter2givensamebeforeM)
+propsameafter2givensamebeforeM<-sameafter2givensamebeforeM/(sameafter2givensamebeforeM+difafter2givensamebeforeM)
+print(propsameafter2givensamebeforeM)
+print(1-pF)
+```
+
+```{r}
+# Observed counts
+observed <- c(ones = sameafter2givensamebeforeM, zeros = difafter2givensamebeforeM)
+
+# Hypothesized probabilities
+expected_probs <- c(1-pF, pF)
+
+# Chi-square goodness-of-fit test
+chisq_resultM <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultM)
+```
+```{r}
+same3F <- rep(NA, length(F3))  # Initialize with NAs
+# Condition 1: All equal and N >= 3 → same3 = 1
+same3F[F2 == F1 & F3 == F1 & N >= 3 & F1 == 1] <- 1
+same3F[F2 == F1 & F3 == (1 - F1) & N >= 3 & F1 == 1] <- 0
+totalsame3givensame2F<-sum(NumFams*same3F,na.rm = TRUE)
+print(totalsame3givensame2F)
+totaldif3givensame2F<-sum(NumFams*(1-same3F),na.rm = TRUE)
+print(totaldif3givensame2F)
+pfgivenFF<-totalsame3givensame2F/(totalsame3givensame2F+totaldif3givensame2F)
+print(pfgivenFF)
+```
+
+```{r}
+same4F <- rep(NA, length(F4))  # Initialize with NAs
+same4F[F2 == F1 & F3 == F1 & F4 == F1 & N >= 4 & F1 == 1] <- 1
+same4F[F2 == F1 & F3 == F1 & F4 == (1-F1) & N >= 4 & F1 == 1] <- 0
+totalsame4givensame3F<-sum(NumFams*same4F,na.rm = TRUE)
+print(totalsame4givensame3F)
+totaldif4givensame3F<-sum(NumFams*(1-same4F),na.rm = TRUE)
+print(totaldif4givensame3F)
+pfgivenFFF<-totalsame4givensame3F/(totalsame4givensame3F+totaldif4givensame3F)
+print(pfgivenFFF)
+```
+
+```{r}
+same5F <- rep(NA, length(F5))  # Initialize with NAs
+same5F[F2 == F1 & F3 == F1 & F4 == F1 & F5 == F1 & N >= 5 & F1 == 1] <- 1
+same5F[F2 == F1 & F3 == F1 & F4 == F1 & F5 == (1-F1) & N >= 5 & F1 == 1] <- 0
+totalsame5givensame4F<-sum(NumFams*same5F,na.rm = TRUE)
+print(totalsame5givensame4F)
+totaldif5givensame4F<-sum(NumFams*(1-same5F),na.rm = TRUE)
+print(totaldif5givensame4F)
+pfgivenFFFF<-totalsame5givensame4F/(totalsame5givensame4F+totaldif5givensame4F)
+print(pfgivenFFFF)
+```
+
+```{r}
+sameafter2givensamebeforeF <- totalsame3givensame2F+totalsame4givensame3F+totalsame5givensame4F
+print(sameafter2givensamebeforeF)
+difafter2givensamebeforeF <- totaldif3givensame2F+totaldif4givensame3F+totaldif5givensame4F
+print(difafter2givensamebeforeF)
+propsameafter2givensamebeforeF<-sameafter2givensamebeforeF/(sameafter2givensamebeforeF+difafter2givensamebeforeF)
+print(propsameafter2givensamebeforeF)
+print(pF)
+```
+
+```{r}
+# Observed counts
+observed <- c(ones = sameafter2givensamebeforeF, zeros = difafter2givensamebeforeF)
+
+# Hypothesized probabilities
+expected_probs <- c(pF, 1-pF)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+```
+
+```{r}
+# Observed counts
+observed <- c(A = sameafter2givensamebeforeF, B = difafter2givensamebeforeF, C = sameafter2givensamebeforeM, D = difafter2givensamebeforeM)
+
+fracF<-(sameafter2givensamebeforeF+difafter2givensamebeforeF)/(sameafter2givensamebeforeF+difafter2givensamebeforeF+sameafter2givensamebeforeM+difafter2givensamebeforeM)
+print(fracF)
+check<-pF*fracF+(1-pF)*fracF+(1-pF)*(1-fracF)+pF*(1-fracF)
+print(check)
+
+# Hypothesized probabilities
+expected_probs <- c(pF*fracF, (1-pF)*fracF, (1-pF)*(1-fracF), pF*(1-fracF))
+
+# Chi-square test
+chisq_result <- chisq.test(x = observed, p = expected_probs)
+
+# Print results
+print(chisq_result)
+```
+
+```{r}
+totalFFF<-sum(NumFams*same3F,na.rm = TRUE)
+totalMMM<-sum(NumFams*same3M,na.rm = TRUE)
+totalfam3<-sum(NumFams*(F3+(1-F3)),na.rm = TRUE)
+psame3<-(totalFFF+totalMMM)/totalfam3
+print(psame3)
+```
+
+```{r}
+totalfam3<-sum(NumFams*(F3+(1-F3)),na.rm = TRUE)
+print(totalfam3)
+totalfam<-sum(NumFams)
+print(totalfam)
+p3given2<-totalfam3/totalfam
+print(p3given2)
+
+totalfamMM<-sum(NumFams*(1-F1)*(1-F2),na.rm = TRUE)
+totalfam3MM<-sum(NumFams*(1-F1)*(1-F2)*(F3+(1-F3)),na.rm = TRUE)
+print(totalfam3MM)
+p3given2MM<-totalfam3MM/totalfamMM
+print(p3given2MM)
+
+totalfamFF<-sum(NumFams*F1*F2,na.rm = TRUE)
+totalfam3FF<-sum(NumFams*F1*F2*(F3+(1-F3)),na.rm = TRUE)
+print(totalfam3FF)
+p3given2FF<-totalfam3FF/totalfamFF
+print(p3given2FF)
+
+print(pF)
+
+```
+
+```{r}
+totalF<-sum(NumFams*F1, na.rm = TRUE)
+totalfam<-sum(NumFams, na.rm = TRUE)
+Fprop1<-totalF/totalfam
+print(Fprop1)
+totalM<-sum(NumFams*(1-F1), na.rm = TRUE)
+Mprop1<-totalM/totalfam
+print(Mprop1)
+
+conditionalprobundercointoss<-pF^2*Fprop1*p3given2FF/p3given2+(1-pF)^2*Mprop1*p3given2MM/p3given2
+print(conditionalprobundercointoss)
+
+binomial=pF^3+(1-pF)^3
+print(binomial)
+
+inflationfactor<-conditionalprobundercointoss/binomial
+print(inflationfactor)
+```
+
+```{r}
+print(Fprop1)
+correctionfactor1F<-Fprop1/pF
+print(correctionfactor1F)
+print(Mprop1)
+correctionfactor1M<-Mprop1/(1-pF)
+print(correctionfactor1M)
+```
+```{r}
+print(p3given2FF)
+print(p3given2)
+correctionfactor2F<-p3given2FF/p3given2
+print(correctionfactor2F)
+print(p3given2MM)
+correctionfactor2M<-p3given2MM/p3given2
+print(correctionfactor2M)
+```
+
+```{r}
+# Observed counts
+observed <- c(ones = totalFFF+totalMMM, zeros = totalfam3-totalFFF-totalMMM)
+
+# Hypothesized probabilities
+expected_probs <- c(conditionalprobundercointoss, 1-conditionalprobundercointoss)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+```
+
+```{r}
+pforcombinedtest<-fracF*pF+(1-fracF)*(1-pF)
+print(pforcombinedtest)
+
+# Observed counts
+observed <- c(ones = sameafter2givensamebeforeF+sameafter2givensamebeforeM, zeros = difafter2givensamebeforeF+difafter2givensamebeforeM)
+
+# Hypothesized probabilities
+expected_probs <- c(pforcombinedtest, 1-pforcombinedtest)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+```
+
+```{r}
+same2 <- rep(NA, length(F1))  # Initialize with NAs
+same2[F2 == F1] <- 1
+same2[F2 == F1-1] <- 0
+totalfam2same<-sum(NumFams*same2,na.rm = TRUE)
+print(totalfam2same)
+totalfam3same2<-totalfam3MM+totalfam3FF
+p3givensame2<-totalfam3same2/totalfam2same
+print(p3givensame2)
+```
+```{r}
+totalfam2dif<-totalfam-totalfam2same
+print(totalfam2dif)
+famMFFM <- rep(NA, length(F3))  # Initialize with NAs
+famMFFM[F2 == 1-F1] <- 1
+famMFFM[F2 == F1] <- 0
+totalfam3dif2<-sum(NumFams*famMFFM*(F3+(1-F3)),na.rm = TRUE)
+print(totalfam3dif2)
+p3givendif2<-totalfam3dif2/totalfam2dif
+print(p3givendif2)
+print(p3givensame2/p3givendif2)
+```
+
+```{r}
+
+# Observed counts
+observed <- c(ones = totalsame5givensame4F, zeros = totaldif5givensame4F)
+
+# Hypothesized probabilities
+expected_probs <- c(pF, pM)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+
+```
+                      
+```{r}
+
+# Observed counts
+observed <- c(ones = totalsame4givensame3M, zeros = totaldif4givensame3M)
+
+# Hypothesized probabilities
+expected_probs <- c(pM, pF)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+
+```
+```{r}
+
+# Observed counts
+observed <- c(ones = totalsame3givensame2F, zeros = totaldif3givensame2F)
+
+# Hypothesized probabilities
+expected_probs <- c(pF, pM)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+
+```
