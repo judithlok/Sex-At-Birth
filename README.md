@@ -1,2 +1,1 @@
-This is the code used to create the results and the simulations in the article "Sex at birth could well be a biological coin toss.... Beware of conditioning on post-baseline information". Authors: Judith J. Lok, Department of Mathematics and Statistics, Boston University\\
-    and Mireille Schnitzer, Faculty of Pharmacy, Universite de Montreal.
+This is the code used to create the results and the simulations in the article "Sex at birth could well be a biological coin toss.... Beware of conditioning on post-baseline information". Authors: Judith J. Lok, Department of Mathematics and Statistics, Boston University, and Mireille Schnitzer, Faculty of Pharmacy, Universite de Montreal.
