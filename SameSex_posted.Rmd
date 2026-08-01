@@ -1,0 +1,558 @@
+---
+Title: "Sex at birth could well be a biological coin toss.... Beware of conditioning on post-baseline information" 
+
+#Judith Lok and Mireille Schnitzer
+
+#Code corresponding to the article with the same name by Judith Lok and Mireille Schnitzer
+
+#Version date 2026-07-17
+
+#This article is a response to "Is sex at birth a biological coin toss? Insights 
+#from a longitudinal and GWAS analysis" by Wang et al. (2025), Science Advances 11 (29), eadu7402.
+
+#This code aims to verify whether the data discussed in Wang et al. (2025)
+#are consistent with the Random Coin Toss Assumption, i.e. the sex of any offspring is 
+#completely random with a constant probability of being male, given that
+#a family might be more likely to have a third child if the first two have the same sex.
+#Specifically, if p_M is the probability of having a male child,
+#the probability of having all male or all female children conditional on
+#having at least three children could be greater than p_M^3+(1-p_M)^3,
+#even if the Random Coin Toss Assumption holds.
+
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r}
+# Clear memory
+rm(list = ls())
+
+# Load libraries
+library(ggplot2)
+library(GGally)
+library(pkgbuild)
+library(readxl)
+# Set the path to YOUR .xlsx file!!!!
+file_path <- "C:/yourfilepath/SameSex_v2.xlsx"  
+file_path <- "C:/Users/jjlok/OneDrive - Boston University/judith/SameSex_v2.xlsx"
+#For example: file_path <- "C:/Users/jjlok/SameSex_v2.xlsx"  
+# Read the data from the Excel file
+SameSexData <- read_excel(file_path)
+
+# View the first few rows to confirm the data was read in well; compare with Wang et al. (2025)
+head(SameSexData)
+attach(SameSexData)
+
+#NumFams is the number of families with children as specified in the next colums
+#Child1F=1 indicates the sex of the first child is female, Child1F=0 indicates it is male
+#Child2F=1 indicates the sex of the second child is female, Child2F=0 indicates it is male
+#Etcetera
+#N is the number of children in the family
+
+```
+
+```{r}
+#Check read in correctly
+head(NumFams)
+head(Child1F)
+```
+
+```{r}
+#Estimating pM and pF based on 2nd, 3rd, 4th, and 5th children in the families
+#Calculating the total number of female children after and not including the first child in a family, for pM and pF
+totalnumF2<-sum(NumFams*Child2F,na.rm = TRUE)
+totalnumF3<-sum(NumFams*Child3F,na.rm = TRUE)
+totalnumF4<-sum(NumFams*Child4F,na.rm = TRUE)
+totalnumF5<-sum(NumFams*Child5F,na.rm = TRUE)
+totalnumFgeq2<-totalnumF2+totalnumF3+totalnumF4+totalnumF5
+print(totalnumF2)
+print(totalnumF3)
+print(totalnumFgeq2)
+#Calculating the total number of children after and not including the first child
+totalnumchildrengeq2<-sum(NumFams*(N-1),na.rm=TRUE)
+print(totalnumchildrengeq2)
+#Observerd proportion of a female vs male children based on children after (and not including!) the first child in a family
+pF<-totalnumFgeq2/totalnumchildrengeq2
+print(pF)
+pM=1-pF
+print(pM)
+
+```
+
+```{r}
+#Observed proportion of families with at least 2 children who have at least 3 children
+totalfam<-sum(NumFams,na.rm = TRUE)
+print(totalfam)
+totalfamgeq3<-sum(NumFams*(Child3F+(1-Child3F)),na.rm = TRUE)
+pgeq3given2<-totalfamgeq3/totalfam
+print(pgeq3given2)
+
+#Observed proportion of families with at least 2 children who are both male who have at least 3 children
+totalfamMM<-sum(NumFams*(1-Child1F)*(1-Child2F),na.rm = TRUE)
+totalfamgeq3MM<-sum(NumFams*(1-Child1F)*(1-Child2F)*(Child3F+(1-Child3F)),na.rm = TRUE)
+print(totalfamgeq3MM)
+pgeq3given2MM<-totalfamgeq3MM/totalfamMM
+print(pgeq3given2MM)
+
+#Observed proportion of families with at least 2 children who are both female who have at least 3 children
+totalfamFF<-sum(NumFams*Child1F*Child2F,na.rm = TRUE)
+totalfamgeq3FF<-sum(NumFams*Child1F*Child2F*(Child3F+(1-Child3F)),na.rm = TRUE)
+print(totalfamgeq3FF)
+pgeq3given2FF<-totalfamgeq3FF/totalfamFF
+print(pgeq3given2FF)
+
+#Observed proportion of families with at least 2 children who are both of the same sex who have at least 3 children
+totalfamMMorFF<-totalfamMM+totalfamFF
+totalfamgeq3MMorFF<-totalfamgeq3MM+totalfamgeq3FF
+print(totalfamgeq3MMorFF)
+pgeq3given2MMorFF<-totalfamgeq3MMorFF/totalfamMMorFF
+print(pgeq3given2MMorFF)
+
+#Observed proportion of families with at least 2 children who are of different sex who have at least 3 children
+totalfamMF<-sum(NumFams*(1-Child1F)*Child2F,na.rm = TRUE)
+totalfamFM<-sum(NumFams*Child1F*(1-Child2F),na.rm = TRUE)
+totalfamMForFM<-totalfamMF+totalfamFM
+totalfamgeq3MF<-sum(NumFams*(1-Child1F)*Child2F*(Child3F+(1-Child3F)),na.rm = TRUE)
+totalfamgeq3FM<-sum(NumFams*Child1F*(1-Child2F)*(Child3F+(1-Child3F)),na.rm = TRUE)
+totalfamgeq3MForFM<-totalfamgeq3MF+totalfamgeq3FM
+print(totalfamgeq3MForFM)
+pgeq3given2MForFM<-totalfamgeq3MForFM/totalfamMForFM
+print(pgeq3given2MForFM)
+```
+```{r}
+#Estimating pM and pF based on 1st, 2nd, 3rd, 4th, and 5th children in the families
+#Calculating the total number of female children including the first child in a family, for pMtilde and pFtilde
+totalnumF1<-sum(NumFams*Child1F,na.rm = TRUE)
+totalnumF<-totalnumF1+totalnumF2+totalnumF3+totalnumF4+totalnumF5
+totalnumchildren<-sum(NumFams*N,na.rm=TRUE)
+print(totalnumchildren)
+#Observerd proportion of a female vs male children based on children including (!) the first child in a family
+pFtilde<-totalnumF/totalnumchildren
+print(pFtilde)
+pMtilde=1-pFtilde
+print(pMtilde)
+```
+
+```{r}
+#proportion of male first children in families of at least 2
+totalChild1M<-sum(NumFams*(1-Child1F), na.rm = TRUE)
+print(totalChild1M)
+Mpropchild1<-totalChild1M/totalfam
+print(Mpropchild1)
+#proportion of female first children in families of at least 2
+totalChild1F<-sum(NumFams*Child1F, na.rm = TRUE)
+print(totalChild1F)
+Fpropchild1<-totalChild1F/totalfam
+print(Fpropchild1)
+
+#First correction factor for male children, following Theorem 1
+print(Mpropchild1)
+correctionfactor1M<-Mpropchild1/pM
+print(correctionfactor1M)
+#First correction factor for female children, following Theorem 1
+print(Fpropchild1)
+correctionfactor1F<-Fpropchild1/pF
+print(correctionfactor1F)
+```
+
+```{r}
+#Second correction factor for male children, following Theorem 1
+print(pgeq3given2MM)
+correctionfactor2M<-pgeq3given2MM/pgeq3given2
+print(correctionfactor2M)
+#Second correction factor for female children, following Theorem 1
+print(pgeq3given2FF)
+print(pgeq3given2)
+correctionfactor2F<-pgeq3given2FF/pgeq3given2
+print(correctionfactor2F)
+```
+
+```{r}
+#Estimate probability that first 3 children have the same sex under random coin toss assumption, 
+#   taking into account that parents may be more likely to
+#   have more children if their first 2 children have the same sex. 
+#Plugging in Theorem 1, and its simplifications for the first correction factors.
+conditionalprobundercointoss<-pF^2*Fpropchild1*pgeq3given2FF/pgeq3given2+(1-pF)^2*Mpropchild1*pgeq3given2MM/pgeq3given2
+print(conditionalprobundercointoss)
+
+#Estimate probability that first 3 children have the same sex if the distribution would follow a binomial 
+#even conditional on families having 3 of more children
+binomial=pF^3+(1-pF)^3
+print(binomial)
+
+#Estimate correction factor due to parents having more children if their first children have the same sex
+inflationfactor<-conditionalprobundercointoss/binomial
+print(inflationfactor)
+```
+```{r}
+#Calculating the observed proportion of MMM families in families with first 2 male children
+MMMNgeq3 <- rep(NA, length(Child3F))  # Initialize with NAs
+MMFNgeq3 <- rep(NA, length(Child3F))  # Initialize with NAs
+#First 3 male and N >= 3
+MMMNgeq3[Child3F == 0 & Child2F == 0 & Child1F == 0 & N >= 3] <- 1
+#First 2 male and 3rd female and N >= 3
+MMFNgeq3[Child3F == 1 & Child2F == 0 & Child1F == 0 & N >= 3] <- 1
+totalMMMNgeq3<-sum(NumFams*MMMNgeq3,na.rm = TRUE)
+print(totalMMMNgeq3)
+totalMMFNgeq3<-sum(NumFams*MMFNgeq3,na.rm = TRUE)
+print(totalMMFNgeq3)
+#proportion of MMM families in families with first 2 male children
+pmgivenMMNgeq3<-totalMMMNgeq3/(totalMMMNgeq3+totalMMFNgeq3)
+print(pmgivenMMNgeq3)
+#Compare with pM
+print(pM)
+```
+
+```{r}
+#Calculating the observed proportion of FFF families in families with first 2 female children
+FFFNgeq3 <- rep(NA, length(Child3F))  # Initialize with NAs
+FFMNgeq3 <- rep(NA, length(Child3F))  # Initialize with NAs
+#First 3 female and N >= 3
+FFFNgeq3[Child3F == 1 & Child2F == 1 & Child1F == 1 & N >= 3] <- 1
+#First 2 female and 3rd female and N >= 3
+FFMNgeq3[Child3F == 0 & Child2F == 1 & Child1F == 1 & N >= 3] <- 1
+totalFFFNgeq3<-sum(NumFams*FFFNgeq3,na.rm = TRUE)
+print(totalFFFNgeq3)
+totalFFMNgeq3<-sum(NumFams*FFMNgeq3,na.rm = TRUE)
+print(totalFFMNgeq3)
+pfgivenFFNgeq3<-totalFFFNgeq3/(totalFFFNgeq3+totalFFMNgeq3)
+print(pfgivenFFNgeq3)
+#Compare with pF
+print(pF)
+```
+
+```{r}
+#Observed proportion of families with at least 3 children who have 3 boys or 3 girls first
+psame3<-(totalFFFNgeq3+totalMMMNgeq3)/totalfamgeq3
+print(psame3)
+```
+
+```{r}
+# Test H_0: sex is a random coin toss based on the sex of the first 3 children in the family
+
+# Observed counts of MMM and FFF versus MMF and FFM in families of at least 3
+observed <- c(ones = totalFFFNgeq3+totalMMMNgeq3, zeros = totalfamgeq3-totalFFFNgeq3-totalMMMNgeq3)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(conditionalprobundercointoss, 1-conditionalprobundercointoss)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+```
+
+
+
+```{r}
+#Calculating the observed proportion of MMMM families in families with first 3 male children
+MMMMNgeq4 <- rep(NA, length(Child4F))  # Initialize with NAs
+MMMFNgeq4 <- rep(NA, length(Child4F))  # Initialize with NAs
+#First 4 male and N >= 4
+MMMMNgeq4[Child4F == 0 & Child3F == 0 & Child2F == 0 & Child1F == 0 & N >= 4] <- 1
+#First 3 male and 4th female and N >= 4
+MMMFNgeq4[Child4F == 1 & Child3F == 0 & Child2F == 0 & Child1F == 0 & N >= 4] <- 1
+totalMMMMNgeq4<-sum(NumFams*MMMMNgeq4,na.rm = TRUE)
+print(totalMMMMNgeq4)
+totalMMMFNgeq4<-sum(NumFams*MMMFNgeq4,na.rm = TRUE)
+print(totalMMMFNgeq4)
+#proportion of MMMM families in families with first 3 male children
+pmgivenMMMNgeq4<-totalMMMMNgeq4/(totalMMMMNgeq4+totalMMMFNgeq4)
+print(pmgivenMMMNgeq4)
+```
+
+
+```{r}
+#Calculating the observed proportion of MMMMM families in families with first 4 male children
+MMMMMNgeq5 <- rep(NA, length(Child1F))  # Initialize with NAs
+MMMMFNgeq5 <- rep(NA, length(Child1F))  # Initialize with NAs
+#First 5 male and N >= 5
+MMMMMNgeq5[Child5F == 0 & Child4F == 0 & Child3F == 0 & Child2F == 0 & Child1F == 0 & N >= 5] <- 1
+#First 4 male and 5th female and N >= 5
+MMMMFNgeq5[Child5F == 1 & Child4F == 0 & Child3F == 0 & Child2F == 0 & Child1F == 0 & N >= 5] <- 1
+totalMMMMMNgeq5<-sum(NumFams*MMMMMNgeq5,na.rm = TRUE)
+print(totalMMMMMNgeq5)
+totalMMMMFNgeq5<-sum(NumFams*MMMMFNgeq5,na.rm = TRUE)
+print(totalMMMMFNgeq5)
+#proportion of MMMMM families in families with first 4 male children
+pmgivenMMMMNgeq5<-totalMMMMMNgeq5/(totalMMMMMNgeq5+totalMMMMFNgeq5)
+print(pmgivenMMMMNgeq5)
+```
+
+```{r}
+#Calculating the observed proportion of male children given the previous children were all male,
+#  for first test reported in Appendix B
+sameafter2givensamebeforeM <- totalMMMNgeq3+totalMMMMNgeq4+totalMMMMMNgeq5
+print(sameafter2givensamebeforeM)
+difafter2givensamebeforeM <- totalMMFNgeq3+totalMMMFNgeq4+totalMMMMFNgeq5
+print(difafter2givensamebeforeM)
+propsameafter2givensamebeforeM<-sameafter2givensamebeforeM/(sameafter2givensamebeforeM+difafter2givensamebeforeM)
+print(propsameafter2givensamebeforeM)
+#Compare with observed proportion male
+print(pM)
+```
+
+```{r}
+#Testing whether the observed proportion of male children given the previous children were all male
+#differs from pM. First test reported in Appendix B.
+
+# Observed counts of sames and not-sames given all M's before
+observed <- c(ones = sameafter2givensamebeforeM, zeros = difafter2givensamebeforeM)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(pM, pF)
+
+# Chi-square goodness-of-fit test
+chisq_resultM <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultM)
+```
+
+```{r}
+#Calculating the observed proportion of FFFF families in families with first 3 female children
+FFFFNgeq4 <- rep(NA, length(Child4F))  # Initialize with NAs
+FFFMNgeq4 <- rep(NA, length(Child4F))  # Initialize with NAs
+#First 4 female and N >= 4
+FFFFNgeq4[Child4F == 1 & Child3F == 1 & Child2F == 1 & Child1F == 1 & N >= 4] <- 1
+#First 3 female and 4th male and N >= 4
+FFFMNgeq4[Child4F == 0 & Child3F == 1 & Child2F == 1 & Child1F == 1 & N >= 4] <- 1
+totalFFFFNgeq4<-sum(NumFams*FFFFNgeq4,na.rm = TRUE)
+print(totalFFFFNgeq4)
+totalFFFMNgeq4<-sum(NumFams*FFFMNgeq4,na.rm = TRUE)
+print(totalFFFMNgeq4)
+pfgivenFFFNgeq4<-totalFFFFNgeq4/(totalFFFFNgeq4+totalFFFMNgeq4)
+print(pfgivenFFFNgeq4)
+```
+
+```{r}
+#Calculating the observed proportion of FFFFF families in families with first 4 female children
+FFFFFNgeq5 <- rep(NA, length(Child5F))  # Initialize with NAs
+FFFFMNgeq5 <- rep(NA, length(Child5F))  # Initialize with NAs
+#First 5 female and N >= 4
+FFFFFNgeq5[Child5F == 1 & Child4F == 1 & Child3F == 1 & Child2F == 1 & Child1F == 1 & N >= 5] <- 1
+#First 4 female and 5th male and N >= 4
+FFFFMNgeq5[Child5F == 0 & Child4F == 1 & Child3F == 1 & Child2F == 1 & Child1F == 1 & N >= 5] <- 1
+totalFFFFFNgeq5<-sum(NumFams*FFFFFNgeq5,na.rm = TRUE)
+print(totalFFFFFNgeq5)
+totalFFFFMNgeq5<-sum(NumFams*FFFFMNgeq5,na.rm = TRUE)
+print(totalFFFFMNgeq5)
+pfgivenFFFFNgeq5<-totalFFFFFNgeq5/(totalFFFFFNgeq5+totalFFFFMNgeq5)
+print(pfgivenFFFFNgeq5)
+```
+
+```{r}
+#Calculating the observed proportion of female children given the previous children were all female
+#  for second test reported in Appendix B
+sameafter2givensamebeforeF <- totalFFFNgeq3+totalFFFFNgeq4+totalFFFFFNgeq5
+print(sameafter2givensamebeforeF)
+difafter2givensamebeforeF <- totalFFMNgeq3+totalFFFMNgeq4+totalFFFFMNgeq5
+print(difafter2givensamebeforeF)
+propsameafter2givensamebeforeF<-sameafter2givensamebeforeF/(sameafter2givensamebeforeF+difafter2givensamebeforeF)
+print(propsameafter2givensamebeforeF)
+#Compare with observed proportion female
+print(pF)
+```
+
+```{r}
+#Testing whether the observed proportion of female children given the previous children were all female
+#differs from pF. Second test reported in Appendix B.
+
+# Observed counts of sames and not-sames given all F's before
+observed <- c(ones = sameafter2givensamebeforeF, zeros = difafter2givensamebeforeF)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(pF, pM)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+```
+
+```{r}
+#Testing whether the observed proportion of children of the same sex given the previous children were all of the same sex
+#differs from pM versus pF. 4 expected probabilities: female given all previous female, male given all previous female,
+#  male given all previous male, female given all previous male
+
+# Observed counts of same and not-sames given all M's before and given all F's before
+# Compare observed and expected under random coin toss assumption
+
+observed <- c(A = sameafter2givensamebeforeF, B = difafter2givensamebeforeF, C = sameafter2givensamebeforeM, D = difafter2givensamebeforeM)
+
+fracF<-(sameafter2givensamebeforeF+difafter2givensamebeforeF)/(sameafter2givensamebeforeF+difafter2givensamebeforeF+sameafter2givensamebeforeM+difafter2givensamebeforeM)
+print(fracF)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(pF*fracF, (1-pF)*fracF, (1-pF)*(1-fracF), pF*(1-fracF))
+
+# Chi-square test
+chisq_result <- chisq.test(x = observed, p = expected_probs)
+
+# Print results
+print(chisq_result)
+```
+
+
+```{r}
+#Combined test for 3rd, 4th, and 5th child given same-sex children before. Third test described in Appendix B.
+
+pforcombinedtest<-fracF*pF+(1-fracF)*(1-pF)
+print(pforcombinedtest)
+
+# Observed counts of same sex and not-same sex in families that so-far had same-sex children
+observed <- c(ones = sameafter2givensamebeforeF+sameafter2givensamebeforeM, zeros = difafter2givensamebeforeF+difafter2givensamebeforeM)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(pforcombinedtest, 1-pforcombinedtest)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+```
+
+```{r}
+#Calculating the proportion of families that had at least 3 children given their first 2 children had the same sex
+same2 <- rep(NA, length(Child1F))  # Initialize with NAs
+same2[Child2F == Child1F] <- 1
+same2[Child2F == Child1F-1] <- 0
+totalfam2same<-sum(NumFams*same2,na.rm = TRUE)
+print(totalfam2same)
+totalfamgeq3same2<-totalfamgeq3MM+totalfamgeq3FF
+p3givensame2<-totalfamgeq3same2/totalfam2same
+print(p3givensame2)
+```
+
+```{r}
+#Calculating the observed proportion that had at least 3 children given their first 2 children did not have the same sex
+totalfam2dif<-totalfam-totalfam2same
+print(totalfam2dif)
+famMForFM <- rep(NA, length(Child3F))  # Initialize with NAs
+famMForFM[Child2F == 1-Child1F] <- 1
+famMForFM[Child2F == Child1F] <- 0
+totalfam3dif2<-sum(NumFams*famMForFM*(Child3F+(1-Child3F)),na.rm = TRUE)
+print(totalfam3dif2)
+p3givendif2<-totalfam3dif2/totalfam2dif
+print(p3givendif2)
+#And their quotient
+print(p3givensame2/p3givendif2)
+```
+
+```{r}
+#For table in Appendix B
+#Test whether the 5th child after 4 male children follows random coin toss assumption
+
+# Observed counts
+observed <- c(ones = totalMMMMMNgeq5, zeros = totalMMMMFNgeq5)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(pM, pF)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+print(totalMMMMMNgeq5/(totalMMMMMNgeq5+totalMMMMFNgeq5))
+print(pM)
+```
+
+```{r}
+#For table in Appendix B
+#Test whether the 5th child after 4 female children follows random coin toss assumption
+
+# Observed counts
+observed <- c(ones = totalFFFFFNgeq5, zeros = totalFFFFMNgeq5)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(pF, pM)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+print(totalFFFFFNgeq5/(totalFFFFFNgeq5+totalFFFFMNgeq5))
+print(pF)
+```
+                      
+```{r}
+#For table in Appendix B
+#Test whether the 4th child after 3 male children follows random coin toss assumption
+
+# Observed counts
+observed <- c(ones = totalMMMMNgeq4, zeros = totalMMMFNgeq4)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(pM, pF)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+print(totalMMMMNgeq4/(totalMMMMNgeq4+totalMMMFNgeq4))
+print(pM)
+```
+```{r}
+#For table in Appendix B
+#Test whether the 4th child after 3 female children follows random coin toss assumption
+
+# Observed counts
+observed <- c(ones = totalFFFFNgeq4, zeros = totalFFFMNgeq4)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(pF, pM)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+print(totalFFFFNgeq4/(totalFFFFNgeq4+totalFFFMNgeq4))
+print(pF)
+```
+```{r}
+#For table in Appendix B
+#Test whether the 3rd child after 2 male children follows random coin toss assumption
+
+# Observed counts
+observed <- c(ones = totalMMMNgeq3, zeros = totalMMFNgeq3)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(pM, pF)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+print(totalMMMNgeq3/(totalMMMNgeq3+totalMMFNgeq3))
+print(pM)
+```
+```{r}
+#For table in Appendix B
+#Test whether the 3rd child after 2 female children follows random coin toss assumption
+
+# Observed counts
+observed <- c(ones = totalFFFNgeq3, zeros = totalFFMNgeq3)
+
+# Hypothesized probabilities under random coin toss assumption
+expected_probs <- c(pF, pM)
+
+# Chi-square goodness-of-fit test
+chisq_resultF <- chisq.test(x = observed, p = expected_probs)
+
+# View the result
+print(chisq_resultF)
+print(totalFFFNgeq3/(totalFFFNgeq3+totalFFMNgeq3))
+print(pF)
+```
