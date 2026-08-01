@@ -38,7 +38,6 @@ library(pkgbuild)
 library(readxl)
 # Set the path to YOUR .xlsx file!!!!
 file_path <- "C:/yourfilepath/SameSex_v2.xlsx"  
-file_path <- "C:/Users/jjlok/OneDrive - Boston University/judith/SameSex_v2.xlsx"
 #For example: file_path <- "C:/Users/jjlok/SameSex_v2.xlsx"  
 # Read the data from the Excel file
 SameSexData <- read_excel(file_path)
